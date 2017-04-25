@@ -189,7 +189,7 @@ public:
     /// <summary>
     /// Returns Favorites constant string
     /// </summary>
-    static const string_t favorite() { return _T("Favorites"); }
+    static const string_t favorite() { return _T("Favorite"); }
 
     /// <summary>
     /// Returns People constant string

@@ -111,10 +111,10 @@ LR"({
     ]
 })";
 
-DEFINE_TEST_CLASS(leaderboard_serializer_tests)
+DEFINE_TEST_CLASS(LeaderboardTests)
 {
 public:
-    DEFINE_TEST_CLASS_PROPS(leaderboard_serializer_tests)
+    DEFINE_TEST_CLASS_PROPS(LeaderboardTests)
 
     void VerifyLeaderboardColumn(LeaderboardColumn^ column, web::json::value columnToVerify)
     {
@@ -340,13 +340,26 @@ public:
             "98052",
             "c4060100-4951-4a51-a630-dce26c15b8c5",
             "EncodedRecordMax.HoleId.108.RecordTypeId.3",
-            "All",
+            Social::SocialGroupConstants::People,
             20
             )).get();
 
         VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
         VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
-        VERIFY_ARE_EQUAL_STR(L"/users/xuid(98052)/scids/c4060100-4951-4a51-a630-dce26c15b8c5/stats/EncodedRecordMax.HoleId.108.RecordTypeId.3/people/All?maxItems=20", httpCall->PathQueryFragment.to_string());
+        VERIFY_ARE_EQUAL_STR(L"/users/xuid(98052)/scids/c4060100-4951-4a51-a630-dce26c15b8c5/stats/EncodedRecordMax.HoleId.108.RecordTypeId.3/people/all?maxItems=20", httpCall->PathQueryFragment.to_string());
+        VerifyLeadershipResult(result, responseV1Json);
+
+        result = create_task(xboxLiveContext->LeaderboardService->GetLeaderboardForSocialGroupAsync(
+            "98052",
+            "c4060100-4951-4a51-a630-dce26c15b8c5",
+            "EncodedRecordMax.HoleId.108.RecordTypeId.3",
+            Social::SocialGroupConstants::Favorite,
+            20
+        )).get();
+
+        VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
+        VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
+        VERIFY_ARE_EQUAL_STR(L"/users/xuid(98052)/scids/c4060100-4951-4a51-a630-dce26c15b8c5/stats/EncodedRecordMax.HoleId.108.RecordTypeId.3/people/Favorite?maxItems=20", httpCall->PathQueryFragment.to_string());
         VerifyLeadershipResult(result, responseV1Json);
 
         httpCall->ResultValue = StockMocks::CreateMockHttpCallResponse(responseJson);
@@ -355,13 +368,13 @@ public:
             "c4060100-4951-4a51-a630-dce26c15b8c5",
             "lbEncodedRecordHoleId101RecordTypeId1",
             "98052",
-            "All",
+            Social::SocialGroupConstants::People,
             20
             )).get();
 
         VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
         VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
-        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?xuid=98052&maxItems=20&view=People&viewTarget=All", httpCall->PathQueryFragment.to_string());
+        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?xuid=98052&maxItems=20&view=People&viewTarget=People", httpCall->PathQueryFragment.to_string());
         VerifyLeadershipResult(result, responseJson);
 
         columns.push_back(_T("HasSkull"));
@@ -373,14 +386,14 @@ public:
             "c4060100-4951-4a51-a630-dce26c15b8c5",
             "lbEncodedRecordHoleId101RecordTypeId1",
             "98052",
-            "All",
+            Social::SocialGroupConstants::People,
             UtilsWinRT::CreatePlatformVectorFromStdVectorString(columns)->GetView(),
             20
             )).get();
 
         VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
         VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
-        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?include=valuemetadata&xuid=98052&maxItems=20&view=People&viewTarget=All", httpCall->PathQueryFragment.to_string());
+        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?include=valuemetadata&xuid=98052&maxItems=20&view=People&viewTarget=People", httpCall->PathQueryFragment.to_string());
         VerifyLeadershipResult(result, responseJson);
     }
 
@@ -399,13 +412,13 @@ public:
             "98052",
             "c4060100-4951-4a51-a630-dce26c15b8c5",
             "EncodedRecordMax.HoleId.108.RecordTypeId.3",
-            "All",
+            Social::SocialGroupConstants::People,
             "descending",
             20
             )).get();
         VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
         VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
-        VERIFY_ARE_EQUAL_STR(L"/users/xuid(98052)/scids/c4060100-4951-4a51-a630-dce26c15b8c5/stats/EncodedRecordMax.HoleId.108.RecordTypeId.3/people/All?sort=descending&maxItems=20", httpCall->PathQueryFragment.to_string());
+        VERIFY_ARE_EQUAL_STR(L"/users/xuid(98052)/scids/c4060100-4951-4a51-a630-dce26c15b8c5/stats/EncodedRecordMax.HoleId.108.RecordTypeId.3/people/all?sort=descending&maxItems=20", httpCall->PathQueryFragment.to_string());
         VerifyLeadershipResult(result, responseV1Json);
     }
 
@@ -424,7 +437,7 @@ public:
             "98052",
             "c4060100-4951-4a51-a630-dce26c15b8c5",
             "EncodedRecordMax.HoleId.108.RecordTypeId.3",
-            "All",
+            Social::SocialGroupConstants::People,
             2,
             "descending",
             20
@@ -432,7 +445,7 @@ public:
 
         VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
         VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
-        VERIFY_ARE_EQUAL_STR(L"/users/xuid(98052)/scids/c4060100-4951-4a51-a630-dce26c15b8c5/stats/EncodedRecordMax.HoleId.108.RecordTypeId.3/people/All?sort=descending&maxItems=20&skipToRank=2", httpCall->PathQueryFragment.to_string());
+        VERIFY_ARE_EQUAL_STR(L"/users/xuid(98052)/scids/c4060100-4951-4a51-a630-dce26c15b8c5/stats/EncodedRecordMax.HoleId.108.RecordTypeId.3/people/all?sort=descending&maxItems=20&skipToRank=2", httpCall->PathQueryFragment.to_string());
         VerifyLeadershipResult(result, responseV1Json);
 
         httpCall->ResultValue = StockMocks::CreateMockHttpCallResponse(responseJson);
@@ -441,14 +454,14 @@ public:
             "c4060100-4951-4a51-a630-dce26c15b8c5",
             "lbEncodedRecordHoleId101RecordTypeId1",
             "98052",
-            "All",
+            Social::SocialGroupConstants::People,
             2,
             20
             )).get();
 
         VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
         VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
-        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?xuid=98052&maxItems=20&skipToRank=2&view=People&viewTarget=All", httpCall->PathQueryFragment.to_string());
+        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?xuid=98052&maxItems=20&skipToRank=2&view=People&viewTarget=People", httpCall->PathQueryFragment.to_string());
         VerifyLeadershipResult(result, responseJson);
 
         columns.push_back(_T("HasSkull"));
@@ -460,7 +473,7 @@ public:
             "c4060100-4951-4a51-a630-dce26c15b8c5",
             "lbEncodedRecordHoleId101RecordTypeId1",
             "98052",
-            "All",
+            Social::SocialGroupConstants::People,
             2,
             UtilsWinRT::CreatePlatformVectorFromStdVectorString(columns)->GetView(),
             20
@@ -468,7 +481,7 @@ public:
 
         VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
         VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
-        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?include=valuemetadata&xuid=98052&maxItems=20&skipToRank=2&view=People&viewTarget=All", httpCall->PathQueryFragment.to_string());
+        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?include=valuemetadata&xuid=98052&maxItems=20&skipToRank=2&view=People&viewTarget=People", httpCall->PathQueryFragment.to_string());
         VerifyLeadershipResult(result, responseJson);
     }
 
@@ -487,7 +500,7 @@ public:
             "98052",
             "c4060100-4951-4a51-a630-dce26c15b8c5",
             "EncodedRecordMax.HoleId.108.RecordTypeId.3",
-            "All",
+            Social::SocialGroupConstants::People,
             "2533274896500838",
             "ascending",
             20
@@ -495,7 +508,7 @@ public:
 
         VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
         VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
-        VERIFY_ARE_EQUAL_STR(L"/users/xuid(98052)/scids/c4060100-4951-4a51-a630-dce26c15b8c5/stats/EncodedRecordMax.HoleId.108.RecordTypeId.3/people/All?sort=ascending&maxItems=20&skipToUser=2533274896500838", httpCall->PathQueryFragment.to_string());
+        VERIFY_ARE_EQUAL_STR(L"/users/xuid(98052)/scids/c4060100-4951-4a51-a630-dce26c15b8c5/stats/EncodedRecordMax.HoleId.108.RecordTypeId.3/people/all?sort=ascending&maxItems=20&skipToUser=2533274896500838", httpCall->PathQueryFragment.to_string());
         VerifyLeadershipResult(result, responseV1Json);
 
         httpCall->ResultValue = StockMocks::CreateMockHttpCallResponse(responseJson);
@@ -504,14 +517,14 @@ public:
             "c4060100-4951-4a51-a630-dce26c15b8c5",
             "lbEncodedRecordHoleId101RecordTypeId1",
             "98052",
-            "All",
+            Social::SocialGroupConstants::People,
             "2533274896500838",
             20
             )).get();
 
         VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
         VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
-        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?xuid=98052&maxItems=20&skipToUser=2533274896500838&view=People&viewTarget=All", httpCall->PathQueryFragment.to_string());
+        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?xuid=98052&maxItems=20&skipToUser=2533274896500838&view=People&viewTarget=People", httpCall->PathQueryFragment.to_string());
         VerifyLeadershipResult(result, responseJson);
         columns.push_back(_T("HasSkull"));
         columns.push_back(_T("Kills"));
@@ -522,7 +535,7 @@ public:
             "c4060100-4951-4a51-a630-dce26c15b8c5",
             "lbEncodedRecordHoleId101RecordTypeId1",
             "98052",
-            "All",
+            Social::SocialGroupConstants::People,
             "2533274896500838",
             UtilsWinRT::CreatePlatformVectorFromStdVectorString(columns)->GetView(),
             20
@@ -530,7 +543,7 @@ public:
 
         VERIFY_ARE_EQUAL_STR(L"GET", httpCall->HttpMethod);
         VERIFY_ARE_EQUAL_STR(L"https://leaderboards.mockenv.xboxlive.com", httpCall->ServerName);
-        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?include=valuemetadata&xuid=98052&maxItems=20&skipToUser=2533274896500838&view=People&viewTarget=All", httpCall->PathQueryFragment.to_string());
+        VERIFY_ARE_EQUAL_STR(L"/scids/c4060100-4951-4a51-a630-dce26c15b8c5/leaderboards/lbEncodedRecordHoleId101RecordTypeId1?include=valuemetadata&xuid=98052&maxItems=20&skipToUser=2533274896500838&view=People&viewTarget=People", httpCall->PathQueryFragment.to_string());
         VerifyLeadershipResult(result, responseJson);
     }
 
@@ -577,7 +590,7 @@ public:
                 nullptr,
                 "c4060100-4951-4a51-a630-dce26c15b8c5",
                 "EncodedRecordMax.HoleId.108.RecordTypeId.3",
-                "All",
+                Social::SocialGroupConstants::People,
                 20
             )).get(),
             E_INVALIDARG
@@ -589,7 +602,7 @@ public:
                 "98052",
                 nullptr,
                 "EncodedRecordMax.HoleId.108.RecordTypeId.3",
-                "All",
+                Social::SocialGroupConstants::People,
                 20
             )).get(),
             E_INVALIDARG
@@ -601,7 +614,7 @@ public:
                 "98052",
                 "c4060100-4951-4a51-a630-dce26c15b8c5",
                 nullptr,
-                "All",
+                Social::SocialGroupConstants::People,
                 20
             )).get(),
             E_INVALIDARG
