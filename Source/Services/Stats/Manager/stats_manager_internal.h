@@ -253,6 +253,13 @@ private:
         _In_ stats_user_context& userContext
         );
 
+#if TV_API
+    ULONG event_write_stat_update(
+        _In_ PCWSTR userId,
+        _In_ PCWSTR statDocument
+        );
+#endif
+
     void flush_to_service(
         _In_ stats_user_context& statsUserContext
         );
@@ -265,6 +272,13 @@ private:
 
     static const std::chrono::seconds TIME_PER_CALL_SEC;
     static const std::chrono::milliseconds STATS_POLL_TIME_MS;
+
+#if TV_API
+    static std::mutex m_initLock;
+    static bool s_bHasInitialized;
+    static std::string s_eventProviderName;
+    static GUID s_eventPlayerSessionId;
+#endif
 
     std::vector<stat_event> m_statEventList;
     std::vector<xbox::services::xbox_live_result<leaderboard::leaderboard_result>> m_leaderboardResults;

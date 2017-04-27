@@ -9,6 +9,11 @@
 #include "xbox_live_context_impl.h"
 #include "ppltasks_extra.h"
 
+#if TV_API
+#pragma pack(push, 16)
+#include "EtwPlus.h"
+#endif
+
 using namespace xbox::services;
 using namespace xbox::services::system;
 using namespace Concurrency::extras;
@@ -23,6 +28,60 @@ std::chrono::seconds(30);
 #endif
 
 const std::chrono::milliseconds stats_manager_impl::STATS_POLL_TIME_MS = std::chrono::minutes(5);
+
+#if TV_API
+bool stats_manager_impl::s_bHasInitialized = false;
+GUID stats_manager_impl::s_eventPlayerSessionId = { 0 };
+std::string stats_manager_impl::s_eventProviderName;
+std::mutex stats_manager_impl::m_initLock;
+
+EXTERN_C __declspec(selectany) ETX_FIELD_DESCRIPTOR XSAPI_Update_Stats_Fields[5] =
+{
+    { EtxFieldType_UnicodeString,0 },
+    { EtxFieldType_UnicodeString,0 },
+    { EtxFieldType_GUID,0 },
+    { EtxFieldType_UnicodeString,0 },
+};
+
+EXTERN_C __declspec(selectany) ETX_EVENT_DESCRIPTOR XSAPI_Update_Stats_Events[1] =
+{
+    {
+        { 1, 1, 0, 0, 0, 0, 0x0 },
+        "StatsUpdate",
+        "0.7.IGSU-1.0",
+        XSAPI_Update_Stats_Fields,
+        5,
+        0,
+        EtxEventEnabledState_Undefined,
+        EtxEventEnabledState_ProviderDefault,
+        EtxPopulationSample_Undefined,
+        EtxPopulationSample_UseProviderPopulationSample,
+        EtxEventLatency_Undefined,
+        EtxEventLatency_ProviderDefault,
+        EtxEventPriority_Undefined,
+        EtxEventPriority_ProviderDefault
+    }
+};
+
+EXTERN_C __declspec(selectany) REGHANDLE XSAPI_Update_Stats_Handle = (REGHANDLE)0;
+
+EXTERN_C __declspec(selectany) ETX_PROVIDER_DESCRIPTOR XSAPI_Update_Stats_Provider =
+{
+    "",
+    { 0 },
+    1,
+    (ETX_EVENT_DESCRIPTOR*)&XSAPI_Update_Stats_Events,
+    0,
+    EtxProviderEnabledState_Undefined,
+    EtxProviderEnabledState_OnByDefault,
+    0,
+    100,
+    EtxProviderLatency_Undefined,
+    EtxProviderLatency_RealTime,
+    EtxProviderPriority_Undefined,
+    EtxProviderPriority_Critical
+};
+#endif
 
 stats_manager_impl::stats_manager_impl()
 {
@@ -173,7 +232,7 @@ stats_manager_impl::add_local_user(
 xbox_live_result<void>
 stats_manager_impl::remove_local_user(
     _In_ const xbox_live_user_t& user
-)
+    )
 {
     std::lock_guard<std::mutex> guard(m_statsServiceMutex);
     string_t userStr = user_context::get_user_id(user);
@@ -207,7 +266,9 @@ stats_manager_impl::remove_local_user(
 
             if(should_write_offline(updateSVDResult))
             {
+#if TV_API | UWP_API
                 pThis->write_offline(statsUserContextIter->second);
+#endif
             }
 
             pThis->m_statEventList.push_back(stat_event(stat_event_type::local_user_removed, user, updateSVDResult));
@@ -255,7 +316,7 @@ stats_manager_impl::request_flush_to_service(
 void
 stats_manager_impl::flush_to_service(
     _In_ stats_user_context& statsUserContext
-)
+    )
 {
     std::weak_ptr<stats_manager_impl> thisWeak = shared_from_this();
     if (statsUserContext.xboxLiveUser == nullptr)
@@ -336,8 +397,9 @@ stats_manager_impl::update_stats_value_document(_In_ stats_user_context& statsUs
                 {
                     statsUserContext.statValueDocument.set_state(svd_state::offline_loaded);
                 }
-
+#if TV_API | UWP_API
                 pThis->write_offline(statsUserContext);
+#endif
             }
             else
             {
@@ -402,7 +464,7 @@ stats_manager_impl::set_stat(
     _In_ const xbox_live_user_t& user,
     _In_ const string_t& name,
     _In_ const char_t* value
-)
+    )
 {
     std::lock_guard<std::mutex> guard(m_statsServiceMutex);
     string_t userStr = user_context::get_user_id(user);
@@ -470,16 +532,54 @@ stats_manager_impl::delete_stat(
 }
 
 #if TV_API
+
+ULONG
+stats_manager_impl::event_write_stat_update(
+    _In_ PCWSTR userId,
+    _In_ PCWSTR statDocument
+    )
+{
+    if (statDocument == nullptr) return ERROR_BAD_ARGUMENTS;
+    if (userId == nullptr) return ERROR_BAD_ARGUMENTS;
+
+    static const uint32_t EventWriteStatsUpdate_ArgCount = 5;
+    static const uint32_t EventWriteStatsUpdate_ScratchSize = 64;
+    EVENT_DATA_DESCRIPTOR eventData[EventWriteStatsUpdate_ArgCount] = { 0 };
+    UINT8 scratch[EventWriteStatsUpdate_ScratchSize] = { 0 };
+
+    EtxFillCommonFields_v7(&eventData[0], scratch, EventWriteStatsUpdate_ScratchSize);
+
+    EventDataDescCreate(&eventData[1], userId, (ULONG)((wcslen(userId) + 1) * sizeof(WCHAR)));
+    EventDataDescCreate(&eventData[2], &s_eventPlayerSessionId, sizeof(GUID));
+    EventDataDescCreate(&eventData[3], statDocument, (ULONG)((wcslen(statDocument) + 1) * sizeof(WCHAR)));
+
+    return EtxEventWrite(
+        &XSAPI_Update_Stats_Events[0],
+        &XSAPI_Update_Stats_Provider,
+        XSAPI_Update_Stats_Handle,
+        EventWriteStatsUpdate_ArgCount,
+        eventData
+    );
+}
+
 void
 stats_manager_impl::write_offline(
     _In_ stats_user_context& userContext
     )
 {
-    UNREFERENCED_PARAMETER(userContext);
-    // TODO: implement
+    ULONG errorCode = event_write_stat_update(
+        userContext.xboxLiveUser->XboxUserId->Data(),
+        userContext.statValueDocument.serialize().as_string().c_str()
+        );
+    HRESULT hr = HRESULT_FROM_WIN32(errorCode);
+    std::error_code errc = static_cast<xbox_live_error_code>(hr);
+    if (errc)
+    {
+        LOG_ERROR("Offline write for stats failed");
+    }
 }
 
-#elif !UNIT_TEST_SERVICES
+#else
 void
 stats_manager_impl::write_offline(
     _In_ stats_user_context& userContext
@@ -492,14 +592,6 @@ stats_manager_impl::write_offline(
     {
         LOG_ERROR("Offline write for stats failed");
     }
-}
-#else
-void
-stats_manager_impl::write_offline(
-    _In_ stats_user_context& userContext
-)
-{
-    UNREFERENCED_PARAMETER(userContext);
 }
 #endif
 
