@@ -36,6 +36,7 @@ get_xsapi_singleton(_In_ bool createIfRequired)
 }
 
 double
+XSAPI_CALL
 xbl_get_version()
 {
     return 5.0f;

@@ -30,6 +30,7 @@ xbl_signin_silently_execute(_In_ const std::shared_ptr<xsapi_async_info>& info)
 }
 
 XSAPI_ASYNC_HANDLE
+XSAPI_CALL
 xbl_signin_silently(
     _In_ void* completionRoutineContext,
     _In_ xbl_signin_silently_completion_routine completionRoutine

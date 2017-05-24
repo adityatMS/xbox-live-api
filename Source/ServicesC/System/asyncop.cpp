@@ -61,6 +61,7 @@ void xbl_asyncop_set_info_in_new_handle(
 }
 
 bool
+XSAPI_CALL
 xbl_thread_is_async_op_pending()
 {
     auto& map = get_xsapi_singleton()->asyncPendingQueue;
@@ -100,6 +101,20 @@ xbl_thread_is_async_op_done(_In_ XSAPI_ASYNC_HANDLE handle)
     if (info == nullptr) return true;
 
     return (info->state == completed);
+}
+
+void
+XSAPI_CALL
+xbl_thread_set_thread_pool_num_threads(_In_ long targetNumThreads)
+{
+    get_xsapi_singleton()->threadPool->set_target_num_active_threads(targetNumThreads);
+}
+
+void
+XSAPI_CALL
+xbl_thread_set_thread_ideal_processor(_In_ int threadIndex, _In_ uint32_t dwIdealProcessor)
+{
+    get_xsapi_singleton()->threadPool->set_thread_ideal_processor(threadIndex, dwIdealProcessor);
 }
 
 

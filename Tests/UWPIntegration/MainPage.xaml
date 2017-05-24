@@ -1,0 +1,26 @@
+﻿<Page
+    x:Class="UWPIntegration.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d" d:DesignWidth="1024" d:DesignHeight="768"
+    DataContext="{Binding RelativeSource={RelativeSource Self}}">
+
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel Orientation="Horizontal">
+            <Button x:Name="signinSilentButton" Content="Sign In silently" Click="SignInSilentButton_Click" Margin="12" Width="113"/>
+            <TextBlock Text="{Binding User.Gamertag}" VerticalAlignment="Center"/>
+            <Button x:Name="signinButton" Content="Sign In" Click="SignInButton_Click" Margin="12" Width="100"/>
+        </StackPanel>
+    </Grid>
+</Page>

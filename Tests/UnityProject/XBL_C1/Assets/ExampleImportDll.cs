@@ -113,18 +113,18 @@ public class ExampleImportDll : MonoBehaviour
 
             Debug.Log("XBL Version: " + Invoke<double, xbl_get_version>(_xsapiNativeDll));
             Invoke<xbl_thread_set_thread_pool_num_threads>(_xsapiNativeDll, 0);
-            //int handle = Invoke<int, xbl_signin_silently>(_xsapiNativeDll, (IntPtr)3, (xbl_signin_silently_completion_routine)signin_complete);
-            int handle = Invoke<int, xbl_signin_silently>(_xsapiNativeDll, (IntPtr)3, null);
+            int handle = Invoke<int, xbl_signin_silently>(_xsapiNativeDll, (IntPtr)3, (xbl_signin_silently_completion_routine)signin_complete);
+            // int handle = Invoke<int, xbl_signin_silently>(_xsapiNativeDll, (IntPtr)3, null);
             bool pendingOp = Invoke<bool, xbl_thread_is_async_op_pending>(_xsapiNativeDll);
             Debug.Log("xbl_thread_is_async_op_pending: " + pendingOp);
             Invoke<xbl_thread_process_pending_async_op>(_xsapiNativeDll);
-            Invoke<xbl_thread_set_thread_pool_num_threads>(_xsapiNativeDll, 3);
-            Invoke<xbl_thread_set_thread_ideal_processor>(_xsapiNativeDll, 0, (uint)0);
-            bool isDone = Invoke<bool, xbl_thread_is_async_op_done>(_xsapiNativeDll, handle);
-            Debug.Log("xbl_thread_is_async_op_done: " + isDone);
-            xbl_signin_silently_result res = GetResultFromNative<xbl_signin_silently_result>(handle);
-            Debug.Log("errorCode: " + res.errorCode);
-            Debug.Log("signInResultCode: " + res.signInResultCode);
+            //Invoke<xbl_thread_set_thread_pool_num_threads>(_xsapiNativeDll, 3);
+            //Invoke<xbl_thread_set_thread_ideal_processor>(_xsapiNativeDll, 0, (uint)0);
+            //bool isDone = Invoke<bool, xbl_thread_is_async_op_done>(_xsapiNativeDll, handle);
+            //Debug.Log("xbl_thread_is_async_op_done: " + isDone);
+            //xbl_signin_silently_result res = GetResultFromNative<xbl_signin_silently_result>(handle);
+            //Debug.Log("errorCode: " + res.errorCode);
+            //Debug.Log("signInResultCode: " + res.signInResultCode);
 
             Debug.Log("Done");
         }
